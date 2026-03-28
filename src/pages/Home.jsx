@@ -199,31 +199,7 @@ const Home = () => {
       >
         {/* GRUPO ESQUERDO: BOTÃO + FRASE FORA */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <Link 
-            to="/loja" 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              background: '#252525', 
-              color: '#ee4d2d', 
-              textDecoration: 'none', 
-              fontWeight: 'bold', 
-              fontSize: '0.85rem',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              border: '1px solid #646161',
-              transition: '0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.border = '1px solid #ee4d2d'}
-            onMouseOut={(e) => e.currentTarget.style.border = '1px solid #444'}
-          >
-            <ShoppingBag size={16} /> LOJINHA
-          </Link>
-          
-          <span style={{ color: '#f77960', fontSize: '0.85rem', fontWeight: '500' }}>
-            👈🏼 oi sou a mary.dev sou afiliada da shopee e essa é minha lojinha
-          </span>
+                 
         </div>
 
         {/* LADO DIREITO (PONTOS E PERFIL) */}
@@ -631,7 +607,7 @@ const Home = () => {
           color: '#666',
         }}
       >
-        <p>&copy; 2025 Sopra Fitas - {jogos.length} jogos disponíveis.</p>
+        <p>&copy; 2026 Winup Network - {jogos.length} jogos disponíveis.</p>
       </footer>
     </div>
   );
