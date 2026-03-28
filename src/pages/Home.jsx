@@ -3,19 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
   Search,
-  Gamepad2,
   Heart,
   Dices,
-  Layers,
   User,
   LogOut,
   Coins,
-  Trophy,
   Crown,
   Medal,
   Target,
   Star,
-  ShoppingBag,
 } from 'lucide-react';
 import { games } from '../constants/games';
 
@@ -47,6 +43,7 @@ const Home = () => {
       try {
         const { data, error } = await supabase.from('jogos').select('*');
         if (error) throw error;
+
         if (data && data.length > 0) {
           setJogos([...data, ...games]);
         }
@@ -56,6 +53,7 @@ const Home = () => {
         setLoadingGames(false);
       }
     };
+
     fetchJogos();
   }, []);
 
@@ -66,6 +64,7 @@ const Home = () => {
         .select('pontos, nome')
         .eq('id', userId)
         .single();
+
       if (perfil) {
         setPontos(perfil.pontos);
         setNomeUsuario(perfil.nome);
@@ -79,6 +78,7 @@ const Home = () => {
         .select('nome, pontos')
         .order('pontos', { ascending: false })
         .limit(5);
+
       if (data) setRanking(data);
       setLoadingRanking(false);
     };
@@ -89,6 +89,7 @@ const Home = () => {
         .from('missoes_globais')
         .select('*')
         .order('created_at', { ascending: false });
+
       if (data) setMissoes(data);
       setLoadingMissoes(false);
     };
@@ -114,6 +115,83 @@ const Home = () => {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.googletag || !window.googletag.cmd) return;
+
+    const googletag = window.googletag;
+
+    googletag.cmd.push(() => {
+      try {
+        if (!window.__gptSlotsInitialized) {
+          window.__gptSlotsInitialized = {};
+        }
+
+        const slotDefinitions = [
+          {
+            key: 'content1',
+            adUnitPath: '/23340104016/assoprafitas.com/content1',
+            sizes: [[336, 280], [250, 250], [300, 250]],
+            divId: 'div-gpt-ad-1774671250771-0',
+          },
+          {
+            key: 'content2',
+            adUnitPath: '/23340104016/assoprafitas.com/content2',
+            sizes: [[300, 250], [250, 250], [336, 280]],
+            divId: 'div-gpt-ad-1774671754596-0',
+          },
+        ];
+
+        slotDefinitions.forEach(({ key, adUnitPath, sizes, divId }) => {
+          if (!window.__gptSlotsInitialized[key] && document.getElementById(divId)) {
+            const slot = googletag
+              .defineSlot(adUnitPath, sizes, divId)
+              .addService(googletag.pubads());
+
+            window.__gptSlotsInitialized[key] = slot;
+          }
+        });
+
+        if (!window.__gptServicesEnabled) {
+          googletag.pubads().enableSingleRequest();
+          googletag.enableServices();
+          window.__gptServicesEnabled = true;
+        }
+
+        slotDefinitions.forEach(({ divId }) => {
+          const el = document.getElementById(divId);
+          if (el && el.childNodes.length === 0) {
+            googletag.display(divId);
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao inicializar anúncios GPT:', error);
+      }
+    });
+
+    return () => {
+      if (!window.googletag || !window.googletag.cmd) return;
+
+      window.googletag.cmd.push(() => {
+        const slotsToDestroy = [];
+
+        if (window.__gptSlotsInitialized?.content1) {
+          slotsToDestroy.push(window.__gptSlotsInitialized.content1);
+          delete window.__gptSlotsInitialized.content1;
+        }
+
+        if (window.__gptSlotsInitialized?.content2) {
+          slotsToDestroy.push(window.__gptSlotsInitialized.content2);
+          delete window.__gptSlotsInitialized.content2;
+        }
+
+        if (slotsToDestroy.length) {
+          window.googletag.destroySlots(slotsToDestroy);
+        }
+      });
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -150,12 +228,14 @@ const Home = () => {
   const jogosFiltrados = jogos.filter((jogo) => {
     const nomeJogo = jogo.nome || '';
     const bateBusca = nomeJogo.toLowerCase().includes(busca.toLowerCase());
+
     let bateCategoria = true;
     if (filtroConsole === '❤️ Favoritos') {
       bateCategoria = favoritos.includes(jogo.id);
     } else if (filtroConsole !== 'Todos') {
       bateCategoria = jogo.console === filtroConsole;
     }
+
     return bateBusca && bateCategoria;
   });
 
@@ -163,6 +243,7 @@ const Home = () => {
     if (index === 0) return <Crown size={14} color="#fca311" fill="#fca311" />;
     if (index === 1) return <Medal size={14} color="#C0C0C0" />;
     if (index === 2) return <Medal size={14} color="#CD7F32" />;
+
     return (
       <span style={{ color: '#666', fontSize: '0.7rem', fontWeight: 'bold' }}>
         #{index + 1}
@@ -181,7 +262,6 @@ const Home = () => {
         color: 'white',
       }}
     >
-      {/* HEADER FIXO */}
       <div
         style={{
           position: 'fixed',
@@ -197,12 +277,8 @@ const Home = () => {
           alignItems: 'center',
         }}
       >
-        {/* GRUPO ESQUERDO: BOTÃO + FRASE FORA */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                 
-        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} />
 
-        {/* LADO DIREITO (PONTOS E PERFIL) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           {session ? (
             <>
@@ -222,6 +298,7 @@ const Home = () => {
                   {pontos}
                 </span>
               </div>
+
               <Link to="/perfil">
                 <button
                   style={{
@@ -241,6 +318,7 @@ const Home = () => {
                   <User size={16} /> {nomeUsuario || 'Meu Perfil'}
                 </button>
               </Link>
+
               <button
                 onClick={handleLogout}
                 style={{
@@ -266,6 +344,9 @@ const Home = () => {
                   borderRadius: '20px',
                   cursor: 'pointer',
                   fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
               >
                 <User size={16} /> ENTRAR
@@ -291,16 +372,87 @@ const Home = () => {
             position: 'relative',
           }}
         >
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            {/* DESAFIOS DO MÊS */}
+          <div style={{ position: 'relative', display: 'block' }}>
             <div
               style={{
                 position: 'absolute',
-                left: '-750px', 
-                top: '10px',
+                left: '-300px',
+                top: '0px',
+                width: '260px',
+                textAlign: 'center',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '0.7rem',
+                  color: '#777',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Ad content
+              </span>
+
+              <div
+                id="div-gpt-ad-1774671250771-0"
+                style={{
+                  minWidth: '250px',
+                  minHeight: '250px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  overflow: 'hidden',
+                  margin: '0 auto',
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                position: 'absolute',
+                right: '-300px',
+                top: '0px',
+                width: '260px',
+                textAlign: 'center',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '0.7rem',
+                  color: '#777',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Ad content
+              </span>
+
+              <div
+                id="div-gpt-ad-1774671754596-0"
+                style={{
+                  minWidth: '250px',
+                  minHeight: '250px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  overflow: 'hidden',
+                  margin: '0 auto',
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                position: 'absolute',
+                left: '-300px',
+                top: '300px',
                 width: '260px',
                 background: 'rgba(20, 20, 20, 0.9)',
-                border: '1px solid #b77a09', 
+                border: '1px solid #b77a09',
                 borderRadius: '12px',
                 padding: '15px',
                 textAlign: 'left',
@@ -322,11 +474,13 @@ const Home = () => {
                   DESAFIOS DO MÊS
                 </span>
               </div>
-              
+
               {loadingMissoes ? (
                 <span style={{ color: '#666', fontSize: '0.8rem' }}>Buscando missões...</span>
               ) : missoes.length === 0 ? (
-                <span style={{ color: '#555', fontSize: '0.75rem' }}>Nenhum desafio no momento.</span>
+                <span style={{ color: '#555', fontSize: '0.75rem' }}>
+                  Nenhum desafio no momento.
+                </span>
               ) : (
                 missoes.map((missao, idx) => (
                   <div
@@ -336,20 +490,42 @@ const Home = () => {
                       padding: '8px',
                       borderRadius: '6px',
                       marginBottom: '8px',
-                      borderLeft: '3px solid #b78009'
+                      borderLeft: '3px solid #b78009',
                     }}
                   >
-                    <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#7209b7', marginBottom: '2px' }}>
+                    <div
+                      style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        color: '#7209b7',
+                        marginBottom: '2px',
+                      }}
+                    >
                       {missao.titulo}
                     </div>
+
                     <div style={{ fontSize: '0.7rem', color: '#aaa', lineHeight: '1.2' }}>
                       {missao.objetivo}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                        <Star size={10} color="#fca311" fill="#fca311" />
-                        <span style={{ fontSize: '0.7rem', color: '#fca311', fontWeight: 'bold' }}>
-                          +{missao.recompensa} pts
-                        </span>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginTop: '4px',
+                      }}
+                    >
+                      <Star size={10} color="#fca311" fill="#fca311" />
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          color: '#fca311',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        +{missao.recompensa} pts
+                      </span>
                     </div>
                   </div>
                 ))
@@ -362,12 +538,11 @@ const Home = () => {
               style={{ maxWidth: '350px', width: '100%' }}
             />
 
-            {/* RANKING LATERAL */}
             <div
               style={{
                 position: 'absolute',
-                right: '-750px', 
-                top: '10px',
+                right: '-300px',
+                top: '300px',
                 width: '240px',
                 background: 'rgba(30, 30, 30, 0.9)',
                 border: '1px solid #444',
@@ -396,6 +571,7 @@ const Home = () => {
                   Ver tudo
                 </Link>
               </div>
+
               {loadingRanking ? (
                 <span style={{ color: '#666', fontSize: '0.8rem' }}>Carregando...</span>
               ) : (
@@ -449,6 +625,7 @@ const Home = () => {
                 }}
               />
             </div>
+
             <button
               onClick={jogarAleatorio}
               style={{
@@ -537,6 +714,7 @@ const Home = () => {
                     fill={favoritos.includes(jogo.id) ? '#ff4d4d' : 'none'}
                   />
                 </button>
+
                 <div
                   style={{
                     height: '160px',
@@ -556,6 +734,7 @@ const Home = () => {
                     }}
                   />
                 </div>
+
                 <h3
                   style={{
                     fontSize: '0.85rem',
@@ -567,6 +746,7 @@ const Home = () => {
                 >
                   {jogo.nome}
                 </h3>
+
                 <span
                   style={{
                     fontSize: '0.7rem',
@@ -577,6 +757,7 @@ const Home = () => {
                 >
                   {jogo.console}
                 </span>
+
                 <Link to={`/jogar/${jogo.id}`}>
                   <button
                     style={{

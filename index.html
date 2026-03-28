@@ -23,6 +23,27 @@
 
     <title>Assopra Fita</title>
 
+    <script
+      async
+      src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      window.googletag = window.googletag || { cmd: [] };
+
+      googletag.cmd.push(function () {
+        var interstitialSlot = googletag.defineOutOfPageSlot(
+          '/23340104016/assoprafitas.com/interstitial',
+          googletag.enums.OutOfPageFormat.INTERSTITIAL
+        );
+
+        if (interstitialSlot) {
+          interstitialSlot.addService(googletag.pubads());
+        }
+      });
+    </script>
+
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
 
     <style>
