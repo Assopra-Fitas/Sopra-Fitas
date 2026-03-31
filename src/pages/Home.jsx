@@ -17,6 +17,7 @@ import { games } from '../constants/games';
 
 const Home = () => {
   const navigate = useNavigate();
+
   const [session, setSession] = useState(null);
   const [pontos, setPontos] = useState(0);
   const [nomeUsuario, setNomeUsuario] = useState('');
@@ -29,11 +30,24 @@ const Home = () => {
   const [busca, setBusca] = useState('');
   const [filtroConsole, setFiltroConsole] = useState('Todos');
   const [jogosVisiveis, setJogosVisiveis] = useState(12);
+  const [screenWidth, setScreenWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200
+  );
 
   const [favoritos, setFavoritos] = useState(() => {
     const salvos = localStorage.getItem('sopra-fitas-favs');
     return salvos ? JSON.parse(salvos) : [];
   });
+
+  const isMobile = screenWidth <= 768;
+  const isTablet = screenWidth <= 1100;
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('sopra-fitas-favs', JSON.stringify(favoritos));
@@ -134,25 +148,38 @@ const Home = () => {
           {
             key: 'content1',
             adUnitPath: '/23340104016/assoprafitas.com/content1',
-            sizes: [[336, 280], [250, 250], [300, 250]],
             divId: 'div-gpt-ad-1774671250771-0',
+            desktopSizes: [[336, 280], [300, 250], [250, 250]],
+            mobileSizes: [[300, 250], [320, 100], [320, 50]],
           },
           {
             key: 'content2',
             adUnitPath: '/23340104016/assoprafitas.com/content2',
-            sizes: [[300, 250], [250, 250], [336, 280]],
             divId: 'div-gpt-ad-1774671754596-0',
+            desktopSizes: [[336, 280], [300, 250], [250, 250]],
+            mobileSizes: [[300, 250], [320, 100], [320, 50]],
           },
         ];
 
-        slotDefinitions.forEach(({ key, adUnitPath, sizes, divId }) => {
-          if (!window.__gptSlotsInitialized[key] && document.getElementById(divId)) {
-            const slot = googletag
-              .defineSlot(adUnitPath, sizes, divId)
-              .addService(googletag.pubads());
+        slotDefinitions.forEach(({ key, adUnitPath, divId, desktopSizes, mobileSizes }) => {
+          const container = document.getElementById(divId);
+          if (!container || window.__gptSlotsInitialized[key]) return;
 
-            window.__gptSlotsInitialized[key] = slot;
-          }
+          const sizeMapping = googletag
+            .sizeMapping()
+            .addSize([1024, 0], desktopSizes)
+            .addSize([0, 0], mobileSizes)
+            .build();
+
+          const slot = googletag
+            .defineSlot(adUnitPath, [...desktopSizes, ...mobileSizes], divId);
+
+          if (!slot) return;
+
+          slot.defineSizeMapping(sizeMapping);
+          slot.addService(googletag.pubads());
+
+          window.__gptSlotsInitialized[key] = slot;
         });
 
         if (!window.__gptServicesEnabled) {
@@ -163,7 +190,7 @@ const Home = () => {
 
         slotDefinitions.forEach(({ divId }) => {
           const el = document.getElementById(divId);
-          if (el && el.childNodes.length === 0) {
+          if (el && el.innerHTML.trim() === '') {
             googletag.display(divId);
           }
         });
@@ -258,6 +285,27 @@ const Home = () => {
     );
   };
 
+  const adBoxStyle = {
+    width: '100%',
+    minHeight: isMobile ? '100px' : '250px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    margin: '0 auto',
+    background: '#111',
+    borderRadius: '10px',
+  };
+
+  const cardLateralStyle = {
+    background: 'rgba(20, 20, 20, 0.92)',
+    border: '1px solid #333',
+    borderRadius: '12px',
+    padding: '15px',
+    textAlign: 'left',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
+  };
+
   return (
     <div
       style={{
@@ -267,6 +315,7 @@ const Home = () => {
         background: 'linear-gradient(to bottom, #121212, #1a1a2e)',
         fontFamily: '"Inter", sans-serif',
         color: 'white',
+        overflowX: 'hidden',
       }}
     >
       <div
@@ -275,18 +324,29 @@ const Home = () => {
           top: 0,
           left: 0,
           right: 0,
-          padding: '15px 30px',
+          padding: isMobile ? '12px 16px' : '15px 30px',
           background: 'rgba(18, 18, 18, 0.95)',
           borderBottom: '1px solid #333',
           zIndex: 100,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '10px',
+          flexWrap: isMobile ? 'wrap' : 'nowrap',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+            justifyContent: isMobile ? 'center' : 'flex-end',
+            width: isMobile ? '100%' : 'auto',
+          }}
+        >
           {session ? (
             <>
               <div
@@ -365,30 +425,32 @@ const Home = () => {
 
       <div
         style={{
-          maxWidth: '1200px',
+          maxWidth: '1400px',
           margin: '0 auto',
-          padding: '100px 20px 40px 20px',
+          padding: isMobile ? '120px 14px 40px' : '100px 20px 40px',
           width: '100%',
           flex: 1,
+          boxSizing: 'border-box',
         }}
       >
-        <header
+        <section
           style={{
-            textAlign: 'center',
+            display: 'grid',
+            gridTemplateColumns: isTablet ? '1fr' : '260px minmax(0, 1fr) 240px',
+            gap: '20px',
+            alignItems: 'start',
             marginBottom: '40px',
-            position: 'relative',
           }}
         >
-          <div style={{ position: 'relative', display: 'block' }}>
-            <div
-              style={{
-                position: 'absolute',
-                left: '-300px',
-                top: '0px',
-                width: '260px',
-                textAlign: 'center',
-              }}
-            >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              order: isTablet ? 2 : 1,
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
               <span
                 style={{
                   display: 'block',
@@ -402,68 +464,14 @@ const Home = () => {
                 Ad content
               </span>
 
-              <div
-                id="div-gpt-ad-1774671250771-0"
-                style={{
-                  minWidth: '250px',
-                  minHeight: '250px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  overflow: 'hidden',
-                  margin: '0 auto',
-                }}
-              />
+              <div id="div-gpt-ad-1774671250771-0" style={adBoxStyle} />
             </div>
 
             <div
               style={{
-                position: 'absolute',
-                right: '-300px',
-                top: '0px',
-                width: '260px',
-                textAlign: 'center',
-              }}
-            >
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: '0.7rem',
-                  color: '#777',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Ad content
-              </span>
-
-              <div
-                id="div-gpt-ad-1774671754596-0"
-                style={{
-                  minWidth: '250px',
-                  minHeight: '250px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  overflow: 'hidden',
-                  margin: '0 auto',
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                position: 'absolute',
-                left: '-300px',
-                top: '300px',
-                width: '260px',
-                background: 'rgba(20, 20, 20, 0.9)',
+                ...cardLateralStyle,
                 border: '1px solid #b77a09',
-                borderRadius: '12px',
-                padding: '15px',
-                textAlign: 'left',
-                boxShadow: '0 4px 15px rgba(224, 168, 16, 0.3)',
+                boxShadow: '0 4px 15px rgba(224, 168, 16, 0.18)',
               }}
             >
               <div
@@ -538,25 +546,134 @@ const Home = () => {
                 ))
               )}
             </div>
+          </div>
 
+          <div
+            style={{
+              textAlign: 'center',
+              order: 1,
+              minWidth: 0,
+            }}
+          >
             <img
               src="/logo.jpg"
               alt="Logo"
-              style={{ maxWidth: '350px', width: '100%' }}
+              style={{
+                maxWidth: isMobile ? '220px' : '350px',
+                width: '100%',
+                marginBottom: '20px',
+              }}
             />
 
             <div
               style={{
-                position: 'absolute',
-                right: '-300px',
-                top: '300px',
-                width: '240px',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '10px',
+                maxWidth: '600px',
+                margin: '0 auto 20px',
+                flexDirection: isMobile ? 'column' : 'row',
+              }}
+            >
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search
+                  color="#666"
+                  style={{ position: 'absolute', left: '15px', top: '12px' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Busque por jogo..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 12px 12px 45px',
+                    borderRadius: '30px',
+                    border: '1px solid #333',
+                    background: '#1e1e1e',
+                    color: 'white',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={jogarAleatorio}
+                style={{
+                  background: 'linear-gradient(45deg, #ff00cc, #333399)',
+                  border: 'none',
+                  borderRadius: isMobile ? '14px' : '50%',
+                  width: isMobile ? '100%' : '50px',
+                  height: '50px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Dices color="white" size={24} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: '10px',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              {categorias.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFiltroConsole(cat)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: filtroConsole === cat ? '#fca311' : '#242424',
+                    color: filtroConsole === cat ? '#1a1a2e' : '#aaa',
+                    fontWeight: 'bold',
+                    fontSize: isMobile ? '0.8rem' : '0.9rem',
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              order: isTablet ? 3 : 3,
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '0.7rem',
+                  color: '#777',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Ad content
+              </span>
+
+              <div id="div-gpt-ad-1774671754596-0" style={adBoxStyle} />
+            </div>
+
+            <div
+              style={{
+                ...cardLateralStyle,
                 background: 'rgba(30, 30, 30, 0.9)',
-                border: '1px solid #444',
-                borderRadius: '12px',
-                padding: '15px',
-                textAlign: 'left',
-                boxShadow: '0 4px 15px rgba(168, 99, 9, 0.5)',
+                boxShadow: '0 4px 15px rgba(168, 99, 9, 0.25)',
               }}
             >
               <div
@@ -566,6 +683,7 @@ const Home = () => {
                   borderBottom: '1px solid #333',
                   paddingBottom: '5px',
                   marginBottom: '8px',
+                  gap: '8px',
                 }}
               >
                 <span style={{ color: '#fca311', fontWeight: 'bold', fontSize: '0.85rem' }}>
@@ -590,10 +708,27 @@ const Home = () => {
                       justifyContent: 'space-between',
                       fontSize: '0.8rem',
                       padding: '6px 0',
+                      gap: '8px',
                     }}
                   >
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      {getIconeRank(idx)} <span>{user.nome || '---'}</span>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'center',
+                        minWidth: 0,
+                      }}
+                    >
+                      {getIconeRank(idx)}
+                      <span
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {user.nome || '---'}
+                      </span>
                     </div>
                     <span style={{ color: '#fca311', fontWeight: 'bold' }}>{user.pontos}</span>
                   </div>
@@ -601,89 +736,15 @@ const Home = () => {
               )}
             </div>
           </div>
-
-          <div
-            style={{
-              marginTop: '30px',
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '10px',
-              maxWidth: '600px',
-              margin: '30px auto',
-            }}
-          >
-            <div style={{ position: 'relative', flex: 1 }}>
-              <Search
-                color="#666"
-                style={{ position: 'absolute', left: '15px', top: '12px' }}
-              />
-              <input
-                type="text"
-                placeholder="Busque por jogo..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 12px 12px 45px',
-                  borderRadius: '30px',
-                  border: '1px solid #333',
-                  background: '#1e1e1e',
-                  color: 'white',
-                }}
-              />
-            </div>
-
-            <button
-              onClick={jogarAleatorio}
-              style={{
-                background: 'linear-gradient(45deg, #ff00cc, #333399)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '50px',
-                height: '50px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Dices color="white" size={24} />
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '10px',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            {categorias.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setFiltroConsole(cat)}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '20px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: filtroConsole === cat ? '#fca311' : '#242424',
-                  color: filtroConsole === cat ? '#1a1a2e' : '#aaa',
-                  fontWeight: 'bold',
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </header>
+        </section>
 
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-            gap: '20px',
+            gridTemplateColumns: isMobile
+              ? 'repeat(2, minmax(0, 1fr))'
+              : 'repeat(auto-fill, minmax(160px, 1fr))',
+            gap: isMobile ? '14px' : '20px',
           }}
         >
           {loadingGames ? (
@@ -695,10 +756,11 @@ const Home = () => {
                 style={{
                   background: '#242038',
                   borderRadius: '12px',
-                  padding: '12px',
+                  padding: isMobile ? '10px' : '12px',
                   textAlign: 'center',
                   border: '1px solid #333',
                   position: 'relative',
+                  minWidth: 0,
                 }}
               >
                 <button
@@ -724,7 +786,7 @@ const Home = () => {
 
                 <div
                   style={{
-                    height: '160px',
+                    height: isMobile ? '130px' : '160px',
                     marginBottom: '10px',
                     borderRadius: '8px',
                     overflow: 'hidden',
@@ -744,10 +806,10 @@ const Home = () => {
 
                 <h3
                   style={{
-                    fontSize: '0.85rem',
+                    fontSize: isMobile ? '0.78rem' : '0.85rem',
                     color: '#fff',
                     marginBottom: '5px',
-                    height: '35px',
+                    height: isMobile ? '32px' : '35px',
                     overflow: 'hidden',
                   }}
                 >
@@ -776,6 +838,7 @@ const Home = () => {
                       cursor: 'pointer',
                       width: '100%',
                       fontWeight: 'bold',
+                      fontSize: isMobile ? '0.8rem' : '0.9rem',
                     }}
                   >
                     JOGAR
@@ -815,6 +878,7 @@ const Home = () => {
           padding: '20px',
           borderTop: '1px solid #333',
           color: '#666',
+          fontSize: isMobile ? '0.8rem' : '1rem',
         }}
       >
         <p>&copy; 2026 Winup Network - {jogos.length} jogos disponíveis.</p>
