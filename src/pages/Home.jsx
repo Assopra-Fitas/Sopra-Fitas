@@ -28,6 +28,7 @@ const Home = () => {
   const [jogos, setJogos] = useState(games);
   const [busca, setBusca] = useState('');
   const [filtroConsole, setFiltroConsole] = useState('Todos');
+  const [jogosVisiveis, setJogosVisiveis] = useState(12);
 
   const [favoritos, setFavoritos] = useState(() => {
     const salvos = localStorage.getItem('sopra-fitas-favs');
@@ -194,6 +195,10 @@ const Home = () => {
     };
   }, []);
 
+  useEffect(() => {
+    setJogosVisiveis(12);
+  }, [busca, filtroConsole]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     alert('Você saiu da conta! Até mais 👋');
@@ -238,6 +243,8 @@ const Home = () => {
 
     return bateBusca && bateCategoria;
   });
+
+  const jogosExibidos = jogosFiltrados.slice(0, jogosVisiveis);
 
   const getIconeRank = (index) => {
     if (index === 0) return <Crown size={14} color="#fca311" fill="#fca311" />;
@@ -681,8 +688,8 @@ const Home = () => {
         >
           {loadingGames ? (
             <span style={{ color: '#666' }}>Carregando...</span>
-          ) : (
-            jogosFiltrados.map((jogo) => (
+          ) : jogosExibidos.length > 0 ? (
+            jogosExibidos.map((jogo) => (
               <div
                 key={jogo.id}
                 style={{
@@ -776,8 +783,30 @@ const Home = () => {
                 </Link>
               </div>
             ))
+          ) : (
+            <span style={{ color: '#666' }}>Nenhum jogo encontrado.</span>
           )}
         </div>
+
+        {!loadingGames && jogosVisiveis < jogosFiltrados.length && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+            <button
+              onClick={() => setJogosVisiveis((prev) => prev + 12)}
+              style={{
+                background: '#fca311',
+                color: '#1a1a2e',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '0.95rem',
+              }}
+            >
+              Ver mais
+            </button>
+          </div>
+        )}
       </div>
 
       <footer
