@@ -14,6 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import { games } from '../constants/games';
+import AnuncioLateral from '../components/AnuncioLateral';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const Home = () => {
   const [jogos, setJogos] = useState(games);
   const [busca, setBusca] = useState('');
   const [filtroConsole, setFiltroConsole] = useState('Todos');
-  const [jogosVisiveis, setJogosVisiveis] = useState(12);
+  const [paginaAtual, setPaginaAtual] = useState(1);
   const [screenWidth, setScreenWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1200
   );
@@ -132,98 +133,10 @@ const Home = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!window.googletag || !window.googletag.cmd) return;
-
-    const googletag = window.googletag;
-
-    googletag.cmd.push(() => {
-      try {
-        if (!window.__gptSlotsInitialized) {
-          window.__gptSlotsInitialized = {};
-        }
-
-        const slotDefinitions = [
-          {
-            key: 'content1',
-            adUnitPath: '/23340104016/assoprafitas.com/content1',
-            divId: 'div-gpt-ad-1774671250771-0',
-            desktopSizes: [[336, 280], [300, 250], [250, 250]],
-            mobileSizes: [[300, 250], [320, 100], [320, 50]],
-          },
-          {
-            key: 'content2',
-            adUnitPath: '/23340104016/assoprafitas.com/content2',
-            divId: 'div-gpt-ad-1774671754596-0',
-            desktopSizes: [[336, 280], [300, 250], [250, 250]],
-            mobileSizes: [[300, 250], [320, 100], [320, 50]],
-          },
-        ];
-
-        slotDefinitions.forEach(({ key, adUnitPath, divId, desktopSizes, mobileSizes }) => {
-          const container = document.getElementById(divId);
-          if (!container || window.__gptSlotsInitialized[key]) return;
-
-          const sizeMapping = googletag
-            .sizeMapping()
-            .addSize([1024, 0], desktopSizes)
-            .addSize([0, 0], mobileSizes)
-            .build();
-
-          const slot = googletag
-            .defineSlot(adUnitPath, [...desktopSizes, ...mobileSizes], divId);
-
-          if (!slot) return;
-
-          slot.defineSizeMapping(sizeMapping);
-          slot.addService(googletag.pubads());
-
-          window.__gptSlotsInitialized[key] = slot;
-        });
-
-        if (!window.__gptServicesEnabled) {
-          googletag.pubads().enableSingleRequest();
-          googletag.enableServices();
-          window.__gptServicesEnabled = true;
-        }
-
-        slotDefinitions.forEach(({ divId }) => {
-          const el = document.getElementById(divId);
-          if (el && el.innerHTML.trim() === '') {
-            googletag.display(divId);
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao inicializar anúncios GPT:', error);
-      }
-    });
-
-    return () => {
-      if (!window.googletag || !window.googletag.cmd) return;
-
-      window.googletag.cmd.push(() => {
-        const slotsToDestroy = [];
-
-        if (window.__gptSlotsInitialized?.content1) {
-          slotsToDestroy.push(window.__gptSlotsInitialized.content1);
-          delete window.__gptSlotsInitialized.content1;
-        }
-
-        if (window.__gptSlotsInitialized?.content2) {
-          slotsToDestroy.push(window.__gptSlotsInitialized.content2);
-          delete window.__gptSlotsInitialized.content2;
-        }
-
-        if (slotsToDestroy.length) {
-          window.googletag.destroySlots(slotsToDestroy);
-        }
-      });
-    };
-  }, []);
+  const jogosPorPagina = 12;
 
   useEffect(() => {
-    setJogosVisiveis(12);
+    setPaginaAtual(1);
   }, [busca, filtroConsole]);
 
   const handleLogout = async () => {
@@ -271,7 +184,42 @@ const Home = () => {
     return bateBusca && bateCategoria;
   });
 
-  const jogosExibidos = jogosFiltrados.slice(0, jogosVisiveis);
+  const totalPaginas = Math.ceil(jogosFiltrados.length / jogosPorPagina);
+  const jogosExibidos = jogosFiltrados.slice(
+    (paginaAtual - 1) * jogosPorPagina,
+    paginaAtual * jogosPorPagina
+  );
+
+  const mudarPagina = (pagina) => {
+    setPaginaAtual(pagina);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const gerarNumerosPagina = () => {
+    const paginas = [];
+    const maxBotoes = isMobile ? 5 : 7;
+
+    if (totalPaginas <= maxBotoes) {
+      for (let i = 1; i <= totalPaginas; i++) paginas.push(i);
+    } else {
+      paginas.push(1);
+      let inicio = Math.max(2, paginaAtual - 1);
+      let fim = Math.min(totalPaginas - 1, paginaAtual + 1);
+
+      if (paginaAtual <= 3) {
+        fim = Math.min(maxBotoes - 2, totalPaginas - 1);
+      } else if (paginaAtual >= totalPaginas - 2) {
+        inicio = Math.max(2, totalPaginas - (maxBotoes - 3));
+      }
+
+      if (inicio > 2) paginas.push('...');
+      for (let i = inicio; i <= fim; i++) paginas.push(i);
+      if (fim < totalPaginas - 1) paginas.push('...');
+      paginas.push(totalPaginas);
+    }
+
+    return paginas;
+  };
 
   const getIconeRank = (index) => {
     if (index === 0) return <Crown size={14} color="#fca311" fill="#fca311" />;
@@ -283,18 +231,6 @@ const Home = () => {
         #{index + 1}
       </span>
     );
-  };
-
-  const adBoxStyle = {
-    width: '100%',
-    minHeight: isMobile ? '100px' : '250px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-    margin: '0 auto',
-    background: '#111',
-    borderRadius: '10px',
   };
 
   const cardLateralStyle = {
@@ -450,22 +386,12 @@ const Home = () => {
               order: isTablet ? 2 : 1,
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: '0.7rem',
-                  color: '#777',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Ad content
-              </span>
-
-              <div id="div-gpt-ad-1774671250771-0" style={adBoxStyle} />
-            </div>
+            <AnuncioLateral
+              key={`ad-left-${paginaAtual}`}
+              adKey="658f27ccb9910421c7c8e05c3a696689"
+              width={300}
+              height={250}
+            />
 
             <div
               style={{
@@ -652,22 +578,12 @@ const Home = () => {
               order: isTablet ? 3 : 3,
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: '0.7rem',
-                  color: '#777',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Ad content
-              </span>
-
-              <div id="div-gpt-ad-1774671754596-0" style={adBoxStyle} />
-            </div>
+            <AnuncioLateral
+              key={`ad-left-${paginaAtual}`}
+              adKey="658f27ccb9910421c7c8e05c3a696689"
+              width={300}
+              height={250}
+            />
 
             <div
               style={{
@@ -851,22 +767,75 @@ const Home = () => {
           )}
         </div>
 
-        {!loadingGames && jogosVisiveis < jogosFiltrados.length && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+        {!loadingGames && totalPaginas > 1 && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '6px',
+              marginTop: '30px',
+              flexWrap: 'wrap',
+            }}
+          >
             <button
-              onClick={() => setJogosVisiveis((prev) => prev + 12)}
+              onClick={() => mudarPagina(paginaAtual - 1)}
+              disabled={paginaAtual === 1}
               style={{
-                background: '#fca311',
-                color: '#1a1a2e',
-                border: 'none',
-                padding: '12px 24px',
+                background: paginaAtual === 1 ? '#1a1a1a' : '#242424',
+                color: paginaAtual === 1 ? '#444' : '#fff',
+                border: '1px solid #333',
+                padding: '8px 12px',
                 borderRadius: '8px',
-                cursor: 'pointer',
+                cursor: paginaAtual === 1 ? 'default' : 'pointer',
                 fontWeight: 'bold',
-                fontSize: '0.95rem',
+                fontSize: '0.85rem',
               }}
             >
-              Ver mais
+              &lt;
+            </button>
+
+            {gerarNumerosPagina().map((item, idx) =>
+              item === '...' ? (
+                <span key={`dots-${idx}`} style={{ color: '#666', padding: '0 4px' }}>
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  onClick={() => mudarPagina(item)}
+                  style={{
+                    background: paginaAtual === item ? '#fca311' : '#242424',
+                    color: paginaAtual === item ? '#1a1a2e' : '#aaa',
+                    border: paginaAtual === item ? 'none' : '1px solid #333',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    minWidth: '38px',
+                  }}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => mudarPagina(paginaAtual + 1)}
+              disabled={paginaAtual === totalPaginas}
+              style={{
+                background: paginaAtual === totalPaginas ? '#1a1a1a' : '#242424',
+                color: paginaAtual === totalPaginas ? '#444' : '#fff',
+                border: '1px solid #333',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                cursor: paginaAtual === totalPaginas ? 'default' : 'pointer',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+              }}
+            >
+              &gt;
             </button>
           </div>
         )}

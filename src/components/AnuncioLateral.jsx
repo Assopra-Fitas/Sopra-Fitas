@@ -1,19 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useMemo } from "react";
 
 const AnuncioLateral = ({ adKey, width, height }) => {
-  const iframeRef = useRef(null);
-
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe || !adKey) return;
-
-    const doc = iframe.contentWindow.document;
-
-    const adContent = `
+  const adContent = useMemo(() => {
+    const cacheBuster = Date.now();
+    return `
       <!DOCTYPE html>
       <html style="margin:0;padding:0;overflow:hidden;">
         <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:#252525;">
-          
           <script>
             atOptions = {
               'key' : '${adKey}',
@@ -23,20 +16,10 @@ const AnuncioLateral = ({ adKey, width, height }) => {
               'params' : {}
             };
           </script>
-
-          <script src="https://www.highperformanceformat.com/${adKey}/invoke.js"></script>
-
+          <script src="https://www.highperformanceformat.com/${adKey}/invoke.js?t=${cacheBuster}"><\/script>
         </body>
       </html>
     `;
-
-    try {
-      doc.open();
-      doc.write(adContent);
-      doc.close();
-    } catch (err) {
-      console.error("Erro ao carregar anúncio:", err);
-    }
   }, [adKey, width, height]);
 
   return (
@@ -51,14 +34,12 @@ const AnuncioLateral = ({ adKey, width, height }) => {
       }}
     >
       <iframe
-        ref={iframeRef}
         title="Publicidade"
+        srcDoc={adContent}
         width={width}
         height={height}
-        loading="lazy"
         scrolling="no"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-        referrerPolicy="no-referrer"
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         style={{
           border: "none",
           overflow: "hidden",
