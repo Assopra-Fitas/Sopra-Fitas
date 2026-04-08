@@ -15,7 +15,7 @@ import {
   Loader2,
   Home,
 } from 'lucide-react';
-import AnuncioLateral from '../components/AnuncioLateral';
+import AnuncioGPT from '../components/AnuncioGPT';
 import { gamesDb } from '../constants/games';
 
 const GameRoom = () => {
@@ -215,11 +215,7 @@ const GameRoom = () => {
         }}
       >
         <h4 style={{ color: '#555', marginBottom: '10px' }}>Publicidade</h4>
-        <AnuncioLateral
-          adKey="658f27ccb9910421c7c8e05c3a696689"
-          width={300}
-          height={250}
-        />
+        <AnuncioGPT adId="div-gpt-ad-1775680124469-0" />
       </aside>
 
       <main
@@ -556,11 +552,7 @@ const GameRoom = () => {
         }}
       >
         <h4 style={{ color: '#555', marginBottom: '10px' }}>Publicidade</h4>
-        <AnuncioLateral
-          adKey="658f27ccb9910421c7c8e05c3a696689"
-          width={300}
-          height={250}
-        />
+        <AnuncioGPT adId="div-gpt-ad-1775680168607-0" />
       </aside>
 
       {modalAberto && (

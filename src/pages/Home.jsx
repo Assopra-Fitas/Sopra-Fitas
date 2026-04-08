@@ -14,7 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import { games } from '../constants/games';
-import AnuncioLateral from '../components/AnuncioLateral';
+import AnuncioGPT from '../components/AnuncioGPT';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -386,12 +386,7 @@ const Home = () => {
               order: isTablet ? 2 : 1,
             }}
           >
-            <AnuncioLateral
-              key={`ad-left-${paginaAtual}`}
-              adKey="658f27ccb9910421c7c8e05c3a696689"
-              width={300}
-              height={250}
-            />
+            <AnuncioGPT adId="div-gpt-ad-1775680124469-0" />
 
             <div
               style={{
@@ -578,12 +573,7 @@ const Home = () => {
               order: isTablet ? 3 : 3,
             }}
           >
-            <AnuncioLateral
-              key={`ad-left-${paginaAtual}`}
-              adKey="658f27ccb9910421c7c8e05c3a696689"
-              width={300}
-              height={250}
-            />
+            <AnuncioGPT adId="div-gpt-ad-1775680168607-0" />
 
             <div
               style={{
